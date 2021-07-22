@@ -40,7 +40,7 @@ OFX_ChainPreset {
 		all.put(key, this);
 		proxy = chain.proxy;
 
-		settings = OFX_StoredList(key, List[], ".pcpreset");
+		settings = OFX_StoredList(key, List[], ".ofxcpreset");
 	}
 
 	slotsToStore {
