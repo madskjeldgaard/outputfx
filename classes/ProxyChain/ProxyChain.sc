@@ -136,8 +136,6 @@ OFX_Chain {
 
 	init { |argProxy, argSlotNames|
 
-      this.fadeTime_(1);
-
 		slotNames = Order.new;
 		slotsInUse = Order.new;
 		sources = ();
@@ -246,7 +244,7 @@ OFX_Chain {
 
 		// JIT gui support
         gui {
-          "Sorry, gui not implemented yet".warn
+          this.proxy.gui
         }
 	// gui { |numItems = 16, buttonList, parent, bounds, isMaster = false|
 	// 	^ChainGui(this, numItems, parent, bounds, true, buttonList, isMaster);

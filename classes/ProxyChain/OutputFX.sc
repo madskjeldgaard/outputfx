@@ -166,7 +166,7 @@ OFX_OutputFX {
 
     // @TODO
     gui{
-      "Not implemented yet".warn
+      proxyChain.gui
     }
 	// gui { |name, numItems, buttonList, parent, bounds, makeSkip = true|
 	// 	// the effects are all on by default:
