@@ -1,14 +1,14 @@
-TITLE:: ProxyChain
+TITLE:: OFX_Chain
 summary:: play ordered synth and filter functions flexibly in one proxy
-categories:: Libraries>JITLib>JITLibExtensions
-related:: Classes/NodeProxy, Classes/Ndef, Classes/ProxyChainGui, Classes/MasterFX, Overviews/JITLib
+categories:: Control>Effects
+related:: Classes/NodeProxy, Classes/Ndef, Classes/OFX_OutputFX, Overviews/JITLib
 
 DESCRIPTION::
-A ProxyChain is a wrapper around a nodeproxy which keeps an ordered collection of sound functions, which can be individually added to or removed from the proxy signal chain, by name.
+A OFX_Chain is a wrapper around a nodeproxy which keeps an ordered collection of sound functions, which can be individually added to or removed from the proxy signal chain, by name.
 
-The ProxyChain class keeps a global dictionary of such sound functions, and a ProxyChain can also have local sound functions.
+The OFX_Chain class keeps a global dictionary of such sound functions, and a OFX_Chain can also have local sound functions.
 
-Like Ndef, Pdef, Tdef, the ProxyChain class keeps all named instances in a class variable code::ProxyChain.all:: where they can be accessed by name: code::ProxyChain('chain1')::.
+Like Ndef, Pdef, Tdef, the OFX_Chain class keeps all named instances in a class variable code::OFX_Chain.all:: where they can be accessed by name: code::OFX_Chain('chain1')::.
 
 subsection:: First Examples
 
@@ -16,7 +16,7 @@ Basic code-only usage first:
 
 code::
 // add a sound source
-ProxyChain.add(
+OFX_Chain.add(
 	\dust, \mix -> { |dens=20, dustdec=0.02, dustfreq= 600|
 		Ringz.ar(Dust.ar(dens).lag(0.0001), dustfreq, dustdec)
 	}
@@ -26,7 +26,7 @@ ProxyChain.add(
 // an association with \filter becomes a filter,
 // and creates a wet/dry balance on the output.
 // several funcs can be added as key1, func1, key2, type -> func2, etc.
-ProxyChain.add(
+OFX_Chain.add(
 	\dist, \filter -> { |in, drive=10, amp=0.2| (in * drive).tanh * amp },
 	\ringmod, \filter -> { |in, randrate=5|
 		// in a filter, 'in' is the signal on the bus
@@ -40,52 +40,52 @@ ProxyChain.add(
 );
 
 // the sound functions are here now:
-ProxyChain.allSources
+OFX_Chain.allSources
 
-// now make a ProxyChain that uses them:
-ProxyChain(\test).clear;
-ProxyChain(\test, [\dust, \dist,\ringmod,\comb, \ampFin]);
+// now make a OFX_Chain that uses them:
+OFX_Chain(\test).clear;
+OFX_Chain(\test, [\dust, \dist,\ringmod,\comb, \ampFin]);
 
 // access by name
-ProxyChain(\test);
+OFX_Chain(\test);
 
-// warns that it cannot reset ProxyChain from 'new' method
-ProxyChain(\test, [\dust, \dist,\ringmod, \ampFin]);
+// warns that it cannot reset OFX_Chain from 'new' method
+OFX_Chain(\test, [\dust, \dist,\ringmod, \ampFin]);
 
 // tell the proxy to play
-ProxyChain(\test).play;
+OFX_Chain(\test).play;
 
 // kick in a source  with a mix level
-ProxyChain(\test).add(\dust, 0.2)
+OFX_Chain(\test).add(\dust, 0.2)
 
 // and an effect with a wet/dry level
-ProxyChain(\test).add(\ringmod, 0.7)
+OFX_Chain(\test).add(\ringmod, 0.7)
 
-ProxyChain(\test).add(\comb, 0.2)
+OFX_Chain(\test).add(\comb, 0.2)
 
 // set effects parameters
-ProxyChain(\test).set(\decay, 10);
+OFX_Chain(\test).set(\decay, 10);
 
 // set proxy fadetime
-ProxyChain(\test).proxy.fadeTime = 3;
+OFX_Chain(\test).proxy.fadeTime = 3;
 
 // remove fx and source by fadeout
-ProxyChain(\test).remove(\ringmod)
+OFX_Chain(\test).remove(\ringmod)
 
-ProxyChain(\test).remove(\comb)
+OFX_Chain(\test).remove(\comb)
 
-ProxyChain(\test).remove(\dust)
+OFX_Chain(\test).remove(\dust)
 
 // make a gui to see its state:
-ProxyChain(\test).gui;
+OFX_Chain(\test).gui;
 ::
-Note:: When using ProxyChains with GUIs and controllers, things become much easier when specs for the process parameters are defined along with the processes. One can do this by adding global specs (code:: Spec.add(\dens, [1, 100, \exp])::s), or by adding specs to the ProxyChain's proxy.
-ProxyChain also supports defining these specs when setting up the repertoire of functions.
+Note:: When using OFX_Chains with GUIs and controllers, things become much easier when specs for the process parameters are defined along with the processes. One can do this by adding global specs (code:: Spec.add(\dens, [1, 100, \exp])::s), or by adding specs to the OFX_Chain's proxy.
+OFX_Chain also supports defining these specs when setting up the repertoire of functions.
 ::
 
 code::
 (	// add a sound source and its specs together:
-ProxyChain.add3(
+OFX_Chain.add3(
 	\dust, \mix -> { |dens=20, dustdec=0.02, dustfreq= 600|
 		Ringz.ar(Dust.ar(dens).lag(0.0001), dustfreq, dustdec)
 	},
@@ -98,13 +98,13 @@ ProxyChain.add3(
 	]
 );
 
-ProxyChain.add3(
+OFX_Chain.add3(
 	\dist, \filter -> { |in, drive=10, amp=0.2| (in * drive).tanh * amp },
 	1.0,
 	( drive: [1, 10, \amp] )
 );
 
-ProxyChain.add3(
+OFX_Chain.add3(
 	\ringmod, \filter -> { |in, randrate=5|
 		// in a filter, 'in' is the signal on the bus
 		in.asArray[0] 	// force mono inputs
@@ -114,13 +114,13 @@ ProxyChain.add3(
 	[randrate: [0.2, 200, \exp]]
 );
 
-ProxyChain.add3(
+OFX_Chain.add3(
 	\comb, \filterIn -> { |in, decay = 3| CombL.ar(in * 0.3, 0.02, [0.03, 0.042], decay) },
 	0.2,
 	(decay: [0.2, 200, \exp])
 );
 
-ProxyChain.add3(
+OFX_Chain.add3(
 	\ampFin, \filter -> { |in, drive=1, ampLimit=1|
 		Limiter.ar(in * drive, ampLimit);
 	},
@@ -130,12 +130,12 @@ ProxyChain.add3(
 )
 
 // ... and now the gui uses these specs:
-ProxyChain(\test, [\dust, \dist,\ringmod,\comb, \ampFin]);
-g = ProxyChain(\test).gui;
+OFX_Chain(\test, [\dust, \dist,\ringmod,\comb, \ampFin]);
+g = OFX_Chain(\test).gui;
 
 // slotNames can be changed while they are off, and the gui will show it
 
-ProxyChain(\test).slotNames = [\dust,\ringmod,\comb, \ampFin];
+OFX_Chain(\test).slotNames = [\dust,\ringmod,\comb, \ampFin];
 
 ::
 
@@ -145,10 +145,10 @@ METHOD:: allSources
 a dict of all available synth and filter functions
 
 METHOD:: all
-a dict of all ProxyChain instances.
+a dict of all OFX_Chain instances.
 
 METHOD:: add
-put synth functions into code::ProxyChain.all::, by name, func, name, func ...
+put synth functions into code::OFX_Chain.all::, by name, func, name, func ...
 
 METHOD:: add3
 add a named synth func with level and specs
@@ -174,16 +174,16 @@ check the sourceDict at srcName
 
 
 METHOD:: new
-look up an existing ProxyChain, or (if new and slotNames are given),
-make a new ProxyChain with ordered names of synth functions in the slotNames.
+look up an existing OFX_Chain, or (if new and slotNames are given),
+make a new OFX_Chain with ordered names of synth functions in the slotNames.
 
 code::
 // the functions can be sources (func, \mix -> func)
 // or filters (\filter -> func, \filterIn -> func)
 (
-c = ProxyChain(\alpha, [\dust, \ringmod, \dist, \comb]);
+c = OFX_Chain(\alpha, [\dust, \ringmod, \dist, \comb]);
 c.play;	// play the proxy
-g = c.gui(12);	// make a gui for it with 12 slots - see ProxyChainGui
+g = c.gui(12);	// make a gui for it with 12 slots - see OFX_ChainGui
 )
 c.add(\dust);
 ::
@@ -206,21 +206,21 @@ like new, but using an existing NodeProxy or Ndef
 
 code::
 Ndef(\bla).ar(2);
-ProxyChain.from(Ndef(\bla), [\dust, \ringmod, \dist, \comb, \ampFin]);
-ProxyChain(\bla).play;
-ProxyChain(\bla).add(\dust);
+OFX_Chain.from(Ndef(\bla), [\dust, \ringmod, \dist, \comb, \ampFin]);
+OFX_Chain(\bla).play;
+OFX_Chain(\bla).add(\dust);
 
 
-ProxyChain.all;
+OFX_Chain.all;
 ::
 
 INSTANCEMETHODS::
 
 METHOD:: key
-the key under which the proxyChain is stored in code::ProxyChain.all ::
+the key under which the proxyChain is stored in code::OFX_Chain.all ::
 
 METHOD:: sources
-an optional dict of local source funcs - these will override source funcs with the same name in code::ProxyChain.all::
+an optional dict of local source funcs - these will override source funcs with the same name in code::OFX_Chain.all::
 
 
 METHOD:: proxy
@@ -289,7 +289,7 @@ get all keys and values at slotName
 
 
 METHOD:: gui
-make a ProxyChainGui for the ProxyChain - see examples.
+make a OFX_ChainGui for the OFX_Chain - see examples.
 
 code::
 // by default, buttonList nil is replaced with control buttons for all slots.
@@ -330,23 +330,23 @@ Replacing a slot and reordering slots:
 code::
 
 // take proxychain from above:
-ProxyChain(\test);
+OFX_Chain(\test);
 // which has these slotnames
-ProxyChain(\test).slotNames
+OFX_Chain(\test).slotNames
 
 ->  Order[ dust, dist, ringmod, comb, ampFin ]
 
 // while no slots are active, switch to new slotNames:
-ProxyChain(\test).slotNames = [ \dust, \ringmod, \dist, \comb5, \ampFin ];
+OFX_Chain(\test).slotNames = [ \dust, \ringmod, \dist, \comb5, \ampFin ];
 
 // make a gui for it - it has the new order
-g = ProxyChain(\test).gui;
+g = OFX_Chain(\test).gui;
 
 (
-// Add \comb5 now, after using its name in ProxyChain
+// Add \comb5 now, after using its name in OFX_Chain
 // -- this is a formlet-like reverb that fades in slowly
 
-ProxyChain.add3(
+OFX_Chain.add3(
 	\comb5, \filterIn -> { arg in, delayScale = 1, decay = 5, dlDrift = 0.1;
 		var combs;
 		delayScale = delayScale.lag2(1);
