@@ -1,0 +1,7 @@
+(
+	\name: 			"OutputFX",
+	\path: 			"OutputFX",
+	\summary:		"OutputFX chain management",
+	\author: 		"Alberto de Campo, Julian Rohrhuber, Mads Kjeldgaard",
+	\version:		0.1
+)
