@@ -65,6 +65,9 @@ OFX_OutputFX {
 
 	set { |...args| proxyChain.set(*args) }
 
+    fadeTime_ { |time| proxyChain.fadeTime_(time) }
+    xset { |...args| proxyChain.xset(*args) }
+
 	slotNames { ^proxyChain.slotNames }
 
 	slotNames_ { |argSlotNames| proxyChain.slotNames_(argSlotNames) }

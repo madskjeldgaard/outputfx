@@ -136,6 +136,8 @@ OFX_Chain {
 
 	init { |argProxy, argSlotNames|
 
+      this.fadeTime_(1);
+
 		slotNames = Order.new;
 		slotsInUse = Order.new;
 		sources = ();
@@ -232,6 +234,10 @@ OFX_Chain {
 	}
 
 	set { |... args| proxy.set(*args) }
+
+    fadeTime_ { |time| proxy.fadeTime_(time) }
+
+    xset { |... args| proxy.xset(*args) }
 
 	clear {
 		proxy.clear;
