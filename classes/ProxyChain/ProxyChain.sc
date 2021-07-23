@@ -173,26 +173,45 @@ OFX_Chain {
 		slotsInUse.remove(key);
 	}
 
+    specialKeyForFunc{|func, index|
+      var prefix = (filter: "wet", mix: "mix", filterIn: "wet")[func.key];
+      ^(prefix ++ index).asSymbol.postln
+    }
+
+    setWet{|slotName, wet|
+      if(this.isSlotActive(slotName), { 
+        var index = this.slotIndexFor(slotName).postln;
+
+        var func = sources[slotName].postln;
+
+        this.setWetForFunc(func, index, wet)
+      }, { 
+        "Slot % is not active".format(slotName).warn
+      })
+    }
+
+    setWetForFunc{|func, index, wet|
+      var specialKey = this.specialKeyForFunc(func, index);
+      var prevVal = proxy.nodeMap.get(specialKey).value;
+      if (wet.isNil) { wet = prevVal ? 0 };
+      // proxy.addSpec(specialKey, \amp.asSpec);
+      proxy.set(specialKey, wet);
+    }
+
 	addSlot { |key, index, wet|
 
 		var func = sources[key];
 		var srcDict = sourceDicts[key];
 
-		var prefix, prevVal, specialKey;
 		if (func.isNil) { "Chain: no func called \%.\n".postf(key, index); ^this };
 		if (index.isNil) { "Chain: index was nil.".postln; ^this };
 
 		this.remove(key);
 		slotsInUse.put(index, key);
 
-		if (func.isKindOf(Association)) {
-			prefix = (filter: "wet", mix: "mix", filterIn: "wet")[func.key];
-			specialKey = (prefix ++ index).asSymbol;
-			prevVal = proxy.nodeMap.get(specialKey).value;
-			if (wet.isNil) { wet = prevVal ? 0 };
-			// proxy.addSpec(specialKey, \amp.asSpec);
-			proxy.set(specialKey, wet);
-		};
+        if (func.isKindOf(Association)) {
+          this.setWetForFunc(func, index, wet)
+        };
 
 		// if (srcDict.notNil and: { srcDict.specs.notNil }) {
 		// 	srcDict.specs.keysValuesDo { |param, spec| proxy.addSpec(param, spec) };
@@ -254,7 +273,11 @@ OFX_Chain {
 	// introspection & preset support:
 	activeSlotNames { ^slotsInUse.array }
 
-	slotIndexFor { |slotName| ^this.activeSlotNames.indexOf(slotName) }
+    isSlotActive{|slotName| ^slotsInUse.array.indexOfEqual(slotName).isNil.not }
+
+	slotIndexFor { |slotName| 
+      ^slotNames.indexOf(slotName)
+    }
 
 	orderIndexFor { |slotName|
 		var rawIndex = this.activeSlotNames.indexOf(slotName);
