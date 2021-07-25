@@ -43,11 +43,13 @@ w = Window.new();
 		}, { 
 			// Only have to update the gui - the other way around is always in sync because an action is called
 			if(proxyval != val /*or: { val != guiObject[\valueLabel].value }*/, {
+				var spec = ~getSpecForSourceAndParam.value(sourceName, key);
+				var unmapped = spec.unmap(proxyval);
 
 				"val: %, proxyval: %".format(val, proxyval).postln;
 				~guiData[sourceName][key] = proxyval;
-				guiObject.slider.value_(proxyval);
-				guiObject.valueLabel.value_(proxyval);
+				guiObject.slider.value_(unmapped);
+				guiObject.valueLabel.value_(unmapped);
 			})
 
 		})
@@ -71,20 +73,25 @@ w = Window.new();
 	);
 };
 
+~getSpecForSourceAndParam = { |sourceName, paramName|
+	OFX_Chain.atSrcDict(sourceName).specs[paramName] 
+	?? Spec.specs[paramName] 
+	?? [0.0,1.0].asSpec;
+};
+
 // Create sliders, labels and number box for a parameter in a slot
 ~slidersForSlot = {|chain, sourceName| 
 	var sliders, params, objectDict;
 	params = OFX_Chain.atSrcDict(sourceName).paramNames;
 	objectDict = IdentityDictionary.new;
 
-	~guiData[sourceName] = IdentityDictionary.new;
+	~guiData[sourceName] = ~guiData[sourceName] ?? IdentityDictionary.new;
 
 	sliders = params.collect{|paramName|
-		var currentLevel = chain.getActiveParamValAt(sourceName, paramName);
-
-		var spec = OFX_Chain.atSrcDict(sourceName).specs[paramName] 
-			?? Spec.specs[paramName] 
-			?? [0.0,1.0].asSpec;
+		var spec = ~getSpecForSourceAndParam.value(sourceName, paramName) ;
+		var currentLevel = spec.unmap(
+			chain.getActiveParamValAt(sourceName, paramName)
+		);
 
 		var valueLabel = NumberBox.new(w)
 		.value_(currentLevel);
@@ -167,17 +174,8 @@ w = Window.new();
 				*~slidersForSlot.value(chain, sourceKey)
 			);
 
-			// @TODO
-			var editButton = Button.new(w)
-			.states_([
-				["gui", Color.black, Color.white],
-			])
-			.action_({|obj|
-				// "yo".postln
-			});
-
 			VLayout(
-				HLayout(button, wetness, editButton), parameterSliders
+				HLayout(button, wetness), parameterSliders, 32
 			)
 		}
 	);
@@ -224,9 +222,9 @@ w = Window.new();
 
 	w.layout_(VLayout(transportButtons, presetButtons, slotButtons));
 	~makeGuiData.value(chain);
-	~checkAllActiveSlots.value(chain);
 	~skipjack = ~makeSkipjack.value(chain);
 
+	~checkAllActiveSlots.value(chain);
 	w.front();
 };
 
@@ -234,3 +232,6 @@ w = Window.new();
 
 )
 Window.closeAll
+
+~guiObjects[\jpverb][\size].slider.value
+~guiData[\jpverb][\size]
