@@ -131,6 +131,10 @@ w = Window.new();
 ~makeChainGui = {|chain, isMainOutput=false|
 	var current = chain.getCurr();
 
+	var title = StaticText.new(w)
+	.string_(chain.key)
+	.font_(Font.default.bold_(true));
+
 	var sourceKeys = OFX_Chain.allSources.keys;
 	var slotButtons = VLayout(
 		*sourceKeys.asArray.collect{|sourceKey, params| 
@@ -169,13 +173,16 @@ w = Window.new();
 				// OFX_Chain.atSrcDict(sourceKey).postln.level = obj.value
 			});
 
-			// @TODO
 			var parameterSliders = VLayout(
 				*~slidersForSlot.value(chain, sourceKey)
 			);
 
+			// @TODO: make blank space flexible 
+			var blankSpace = 12;
+			// @FIXME Doesn't actually work
+			// var blankSpace = [nil];
 			VLayout(
-				HLayout(button, wetness), parameterSliders, 32
+				HLayout(button, wetness), parameterSliders, blankSpace
 			)
 		}
 	);
@@ -220,7 +227,7 @@ w = Window.new();
 
 	]);
 
-	w.layout_(VLayout(transportButtons, presetButtons, slotButtons));
+	w.layout_(VLayout(title, transportButtons, presetButtons, slotButtons));
 	~makeGuiData.value(chain);
 	~skipjack = ~makeSkipjack.value(chain);
 
@@ -231,7 +238,5 @@ w = Window.new();
 ~makeChainGui.value(m.proxyChain, true);
 
 )
-Window.closeAll
 
-~guiObjects[\jpverb][\size].slider.value
-~guiData[\jpverb][\size]
+Window.closeAll;
