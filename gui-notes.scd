@@ -1,7 +1,7 @@
 /*
 
 TODO: 
-- 
+- Check for new parameters / items (is that even possible after defining the proxychain?)
 
 */
 (
@@ -9,7 +9,19 @@ TODO:
 w = Window.new();
 
 ~guiObjects = IdentityDictionary.new;
-// ~guiData = IdentityDictionary.new;
+~guiData = IdentityDictionary.new;
+
+~makeGuiData = {|chain|
+	chain.activeSlotNames.do{|slotName|
+		var proxyValues = chain.keysValuesAt(slotName);
+		proxyValues.do{|pair|
+			var key = pair[0];
+			var val = pair[1];
+			~guiData[slotName][key] = chain.getActiveParamValAt(slotName, key)
+		}
+	}
+	
+};
 
 // Checks whether something is new in a slot (whether it was updated manually outside the gui) and if so updates the gui elements
 ~checkSlot = {|chain, sourceName|
@@ -20,8 +32,8 @@ w = Window.new();
 
 	proxyValues.do{|pair|
 		var key = pair[0];
-		var val = pair[1];
-		// var val = ~guiData[sourceName][key];
+		var proxyval = pair[1];
+		var val = ~guiData[sourceName][key];
 		var guiObject = ~guiObjects[sourceName][key];
 		// "guiObject: %".format(~guiObjects[sourceName][key]).postln;
 		// "sourcename: %, key: %, val: %".format(sourceName, key, val).postln;
@@ -30,9 +42,12 @@ w = Window.new();
 			// "Chain: No gui object for key % in slot %".format(key, sourceName).warn
 		}, { 
 			// Only have to update the gui - the other way around is always in sync because an action is called
-			if(val != guiObject[\slider].value /*or: { val != guiObject[\valueLabel].value }*/, {
-				guiObject.slider.value_(val);
-				guiObject.valueLabel.value_(val);
+			if(proxyval != val /*or: { val != guiObject[\valueLabel].value }*/, {
+
+				"val: %, proxyval: %".format(val, proxyval).postln;
+				~guiData[sourceName][key] = proxyval;
+				guiObject.slider.value_(proxyval);
+				guiObject.valueLabel.value_(proxyval);
 			})
 
 		})
@@ -62,7 +77,7 @@ w = Window.new();
 	params = OFX_Chain.atSrcDict(sourceName).paramNames;
 	objectDict = IdentityDictionary.new;
 
-	// ~guiData[sourceName] = IdentityDictionary.new;
+	~guiData[sourceName] = IdentityDictionary.new;
 
 	sliders = params.collect{|paramName|
 		var currentLevel = chain.getActiveParamValAt(sourceName, paramName);
@@ -80,8 +95,8 @@ w = Window.new();
 		.action_({|obj| 
 			var val = spec.map(obj.value);
 			
-			// valueLabel.value_(val);
-			// ~guiData[sourceName][paramName] = val;
+			valueLabel.value_(val);
+			~guiData[sourceName][paramName] = val;
 			chain.proxy.set(paramName, val);
 		});
 
@@ -208,7 +223,8 @@ w = Window.new();
 	]);
 
 	w.layout_(VLayout(transportButtons, presetButtons, slotButtons));
-
+	~makeGuiData.value(chain);
+	~checkAllActiveSlots.value(chain);
 	~skipjack = ~makeSkipjack.value(chain);
 
 	w.front();
@@ -217,6 +233,4 @@ w = Window.new();
 ~makeChainGui.value(m.proxyChain, true);
 
 )
-~guiData
-
 Window.closeAll
