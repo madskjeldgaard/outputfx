@@ -35,10 +35,11 @@ OFX_ChainGui{
 
     var layout;
 
-    window = window ?? Window.new(name: this.winName);
+    window = window ?? {Window.new(name: this.winName)};
+    window.view.removeAll;
 
     guiObjects = IdentityDictionary.new;
-    guiData = guiData ?? IdentityDictionary.new;
+    guiData = guiData ?? { IdentityDictionary.new };
 
     slotNames = chain.slotNames.copy();
     sourceKeys = OFX_Chain.allSources.keys;
@@ -59,7 +60,7 @@ OFX_ChainGui{
     presetButtons = this.makePresetSection();
 
     this.makeGuiData();
-    skipjack =skipjack ?? this.makeSkipjack();
+    skipjack =skipjack ?? {this.makeSkipjack()};
 
     this.checkAllActiveSlots();
     layout = VLayout(title, transportButtons, presetButtons, slotSections);
