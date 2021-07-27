@@ -15,11 +15,11 @@ OFX_Chain {
 	}
 
 	// old style - not recommended: add list of sources
-	*add { |...args|
-		args.pairsDo { |srcName, source|
-			this.addSource(srcName, source);
-		}
-	}
+	// *add { |...args|
+	// 	args.pairsDo { |srcName, source|
+	// 		this.addSource(srcName, source);
+	// 	}
+	// }
 
 	// new style - recommended: add source, level, specs together
 	*add3 { |srcName, source, level, specs|
@@ -40,6 +40,8 @@ OFX_Chain {
 
 			dict.put(\source, source);
 			srcFunc = if (source.isKindOf(Association)) { source.value } { source };
+            
+            // @FIXME this does not work with NamedControl
 			paramNames = srcFunc.argNames.as(Array);
 			paramNames.remove(\in);
 			dict.put(\paramNames, paramNames);
@@ -175,14 +177,14 @@ OFX_Chain {
 
     specialKeyForFunc{|func, index|
       var prefix = (filter: "wet", mix: "mix", filterIn: "wet")[func.key];
-      ^(prefix ++ index).asSymbol.postln
+      ^(prefix ++ index).asSymbol
     }
 
     setWet{|slotName, wet|
       if(this.isSlotActive(slotName), { 
-        var index = this.slotIndexFor(slotName).postln;
+        var index = this.slotIndexFor(slotName);
 
-        var func = sources[slotName].postln;
+        var func = sources[slotName];
 
         this.setWetForFunc(func, index, wet)
       }, { 
@@ -234,7 +236,7 @@ OFX_Chain {
 	}
 
 		// forward basic messages to the proxy
-	play { arg out, numChannels, group, multi=false, vol, fadeTime, addAction;
+	play { arg out, numChannels, group, multi=false, vol, fadeTime=1, addAction;
 		proxy.play(out, numChannels, group, multi=false, vol, fadeTime, addAction)
 	}
 
@@ -242,11 +244,11 @@ OFX_Chain {
 		proxy.playN(outs, amps, ins, vol, fadeTime, group, addAction);
 	}
 
-	stop { arg fadeTime, reset=false;
+	stop { arg fadeTime=1, reset=false;
 		proxy.stop(fadeTime, reset);
 	}
 
-	end { arg fadeTime, reset=false;
+	end { arg fadeTime=1, reset=false;
 		proxy.end(fadeTime, reset);
 	}
 
@@ -282,7 +284,8 @@ OFX_Chain {
 	orderIndexFor { |slotName|
 		var rawIndex = this.activeSlotNames.indexOf(slotName);
 		if (rawIndex.isNil) {
-			"%: no active slot named %!\n".postf(this, slotName.cs);
+			// "%: no active slot named %!\n".postf(this, slotName.cs);
+            
 			^nil
 		};
 		^slotsInUse.indices[rawIndex];
@@ -298,6 +301,24 @@ OFX_Chain {
 		names.removeAll(proxy.internalKeys);
 		^names
 	}
+
+    // @TODO
+    getActiveParamValAt{|slotName, paramName|
+      ^this.isSlotActive(slotName).if({
+        var value = this.keysValuesAt(slotName)
+        .select{|i| 
+          i.postln;
+          i[0] == paramName 
+        };
+
+        if(value.isNil, { 
+          "Chain: % is nil".format(paramName).warn 
+        }, {
+          value.flatten[1]
+        });
+      });
+
+    }
 
 	keysValuesAt { |slotName|
 		var keys = this.keysAt(slotName);
