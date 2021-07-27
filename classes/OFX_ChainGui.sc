@@ -10,53 +10,65 @@ TODO:
 */
 
 OFX_ChainGui{
-  var <window, chain, guiObjects, guiData, <skipjack, <isMain;
+  var <window, chain, <guiObjects, guiData, <skipjack, <isMain, <slotNames;
+
+  var title, sourceKeys, slotSections,transportButtons, presetButtons;
 
   *new{|proxychain, isMainOutput=false| 
-    super.new.init(proxychain, isMainOutput)
+    ^super.new.init(proxychain, isMainOutput)
   }
 
   init{|proxychain, isMainOutput|
     chain = proxychain;
     isMain = isMainOutput;
-    window = Window.new(name: chain.key.asString);
-    // var current = chain.getCurr();
-
-    guiObjects = IdentityDictionary.new;
-    guiData = IdentityDictionary.new;
 
     this.makeGui();
-
-    this.checkAllActiveSlots();
 
     window.front();
   }
 
+  winName{
+    ^chain.key.asString;
+  }
+
   makeGui{
-    var title = StaticText.new(window)
+
+    var layout;
+
+    window = window ?? Window.new(name: this.winName);
+
+    guiObjects = IdentityDictionary.new;
+    guiData = IdentityDictionary.new;
+
+    slotNames = chain.slotNames.copy();
+    sourceKeys = OFX_Chain.allSources.keys;
+
+    title = StaticText.new()
     .string_(chain.key)
     .font_(Font.default.bold_(true));
 
-    var sourceKeys = OFX_Chain.allSources.keys;
-    var slotSections = VLayout(
-      *sourceKeys.asArray.collect{|sourceKey, params| this.makeSlotSection(sourceKey, params)}
+    slotSections =  VLayout(
+      *slotNames.asArray.collect{|sourceKey, params| this.makeSlotSection(sourceKey, params)}
     );
 
-    var transportButtons = if(isMain, { nil }, {
+    transportButtons = if(isMain, { nil }, {
       this.makeTransportSection() 
     });
 
     // @TODO
-    var presetButtons = this.makePresetSection();
+    presetButtons = this.makePresetSection();
 
     this.makeGuiData();
-    skipjack = this.makeSkipjack();
+    skipjack =skipjack ?? this.makeSkipjack();
 
-    window.layout_(VLayout(title, transportButtons, presetButtons, slotSections));
+    this.checkAllActiveSlots();
+    layout = VLayout(title, transportButtons, presetButtons, slotSections);
+    window.layout_(layout);
+
   }
 
   makeSlotSection{|sourceKey, params|
-    var toggleSlotButton = Button.new(window) 
+    var toggleSlotButton = Button.new() 
     .states_([
       [sourceKey, Color.black, Color.red],
       [sourceKey, Color.black, Color.green],
@@ -75,7 +87,7 @@ OFX_ChainGui{
     });
 
     var currentLevel = OFX_Chain.atSrcDict(sourceKey).level;
-    var wetness = Slider.new(window)
+    var wetness = Slider.new()
     .orientation_(\horizontal)
     .value_(currentLevel)
     .action_({|obj| 
@@ -99,19 +111,19 @@ OFX_ChainGui{
   makePresetSection{
     ^HLayout(*[
       // Save
-      Button.new(window)
+      Button.new()
       .states_([["save"], ["save"]])
       .action_({|obj| if(obj.value == 1, { 
         "not implemented yet".warn
       })}),
 
       // Load
-      Button.new(window)
+      Button.new()
       .states_([["load"], ["load"]])
       .action_({|obj| if(obj.value == 1, { "not implemented yet".warn })}),
 
       // Open
-      Button.new(window)
+      Button.new()
       .states_([["open"], ["open"]])
       .action_({|obj| if(obj.value == 1, { "not implemented yet".warn })}),
 
@@ -122,22 +134,22 @@ OFX_ChainGui{
     ^HLayout(*[
 
       // Play
-      Button.new(window)
+      Button.new()
       .states_([["play"], ["play"]])
       .action_({|obj| if(obj.value == 1, { chain.play })}),
 
       // Stop
-      Button.new(window)
+      Button.new()
       .states_([["stop"], ["stop"]])
       .action_({|obj| if(obj.value == 1, { chain.stop })}),
 
       // Clear
-      Button.new(window)
+      Button.new()
       .states_([["clear"], ["clear"]])
       .action_({|obj| if(obj.value == 1, { chain.clear })}),
 
       // End
-      Button.new(window)
+      Button.new()
       .states_([["end"], ["end"]])
       .action_({|obj| if(obj.value == 1, { chain.end })}),
     ])
@@ -149,7 +161,7 @@ OFX_ChainGui{
       proxyValues.do{|pair|
         var key = pair[0];
         var val = pair[1];
-        guiData[slotName][key] = chain.getActiveParamValAt(slotName, key) ? 0
+        guiData[slotName][key] = guiData[slotName][key] ?? chain.getActiveParamValAt(slotName, key) ? 0
       }
     }
   }
@@ -157,12 +169,31 @@ OFX_ChainGui{
   makeSkipjack {
     SkipJack.new(
       updateFunc: {
+        if(this.isProxyInSync().not, { 
+          "Remaking gui".postln;
+          this.makeGui;
+        });
+
         this.checkAllActiveSlots()
       },  
       dt: 0.1,  
       stopTest: { window.isNil or: { window.isClosed } },  
       name: chain.key,  
     );
+  }
+
+  isProxyInSync{
+    var status;
+    status = if(
+      slotNames != chain.slotNames, {
+        false 
+      }, { true });
+
+    ^status
+    // Check if slotnames changed
+    // Check if parameters changed
+    // Check if specs changed
+
   }
 
   // Checks whether something is new in a slot (whether it was updated manually outside the gui) and if so updates the gui elements
@@ -196,10 +227,11 @@ OFX_ChainGui{
   }
 
   checkAllActiveSlots {
-    chain.slotNames.do{|slotName| 
+    slotNames.do{|slotName| 
       this.checkSlot(chain, slotName) 
     }
   }
+
   getSpecForSourceAndParam { |sourceName, paramName|
     ^OFX_Chain.atSrcDict(sourceName).specs[paramName] 
     ?? Spec.specs[paramName] 
@@ -219,10 +251,10 @@ OFX_ChainGui{
         chain.getActiveParamValAt(sourceName, paramName) ? 0
       );
 
-      var valueLabel = NumberBox.new(window)
+      var valueLabel = NumberBox.new()
       .value_(currentLevel);
 
-      var slider = Slider.new(window)
+      var slider = Slider.new()
       .orientation_(\horizontal)
       .value_(currentLevel)
       .action_({|obj| 
@@ -235,7 +267,7 @@ OFX_ChainGui{
         chain.proxy.set(paramName, val);
       });
 
-      var label = StaticText.new(window)
+      var label = StaticText.new()
       .string_(paramName);
 
       // Used for synchronising with the value of the proxy later on
