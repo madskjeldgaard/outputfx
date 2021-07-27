@@ -38,7 +38,7 @@ OFX_ChainGui{
     window = window ?? Window.new(name: this.winName);
 
     guiObjects = IdentityDictionary.new;
-    guiData = IdentityDictionary.new;
+    guiData = guiData ?? IdentityDictionary.new;
 
     slotNames = chain.slotNames.copy();
     sourceKeys = OFX_Chain.allSources.keys;
