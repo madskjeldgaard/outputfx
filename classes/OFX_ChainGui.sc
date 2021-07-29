@@ -54,12 +54,13 @@ OFX_ChainGui{
       }
     );
 
-    transportButtons = if(isMain, { nil }, {
-      this.makeTransportSection() 
-    });
+    // @TODO
+    // transportButtons = if(isMain, { nil }, {
+    //   this.makeTransportSection() 
+    // });
 
     // @TODO
-    presetButtons = this.makePresetSection();
+    // presetButtons = this.makePresetSection();
 
     this.makeGuiData();
     skipjack =skipjack ?? {this.makeSkipjack()};
@@ -92,7 +93,6 @@ OFX_ChainGui{
     var currentLevel = OFX_Chain.atSrcDict(sourceKey).level;
     var wetness = Slider.new()
     .orientation_(\horizontal)
-    .value_(currentLevel)
     .action_({|obj| 
       chain.setWet(sourceKey, obj.value)
       // OFX_Chain.atSrcDict(sourceKey).postln.level = obj.value
@@ -104,6 +104,11 @@ OFX_ChainGui{
 
     // @TODO: make blank space flexible 
     var blankSpace = 12;
+
+
+    // Set slider after the fact
+    wetness.valueAction_(currentLevel);
+
     // @FIXME Doesn't actually work
     // var blankSpace = [nil];
     ^VLayout(
