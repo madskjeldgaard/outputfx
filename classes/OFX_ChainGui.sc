@@ -4,14 +4,14 @@ The gui is controlled has a timer (SkipJack) attached. It checks whether the gui
 
 TODO: 
 
-- Wet slider does not update properly
+- Wet slider does not intiailize properly (starts at 0)
 - Presets: Allow writing and loading presets, and allow loading them using `.xset`
 - Check for new parameters / items (is that even possible after defining the proxychain?)
 
 */
 
 OFX_ChainGui{
-  var <window, <chain, <guiObjects, <guiData, <skipjack, <isMain, <slotNames, <slotsInUse;
+  var <window, <chain, <guiObjects, <guiData, <skipjack, <isMain, <slotNames, <slotsInUse, <preset;
 
   var title, sourceKeys, slotSections,transportButtons, presetButtons;
 
@@ -32,9 +32,13 @@ OFX_ChainGui{
       });
 
 
+    preset = OFX_ChainPreset.new(chain);
+
     this.makeGui();
 
     window.front();
+
+    ^this
   }
 
   winName{
@@ -70,13 +74,13 @@ OFX_ChainGui{
     // });
 
     // @TODO
-    // presetButtons = this.makePresetSection();
+    presetButtons = this.makePresetSection();
 
     this.makeGuiData();
     skipjack =skipjack ?? {this.makeSkipjack()};
 
     this.checkAllActiveSlots();
-    layout = VLayout(title, transportButtons, presetButtons, slotSections);
+    layout = VLayout(title, transportButtons, presetButtons, StaticText.new().string_("slots: "), slotSections);
     window.layout_(layout);
 
   }
@@ -101,7 +105,7 @@ OFX_ChainGui{
       })
     });
 
-    var currentLevel =  OFX_Chain.atSrcDict(sourceKey).level;
+    var currentWetness = OFX_Chain.atSrcDict(sourceKey).level;
     // var currentLevel = if(guiObjects.notNil && guiObjects.isEmpty.not, { 
     //   if(guiObjects[sourceKey][\wetnessSlider].notNil, {
     //     guiObjects[sourceKey][\wetnessSlider].value
@@ -132,48 +136,88 @@ OFX_ChainGui{
         chain.randomizeSlot(sourceKey)
     });
 
+
     wetness = Slider.new()
         .orientation_(\horizontal)
+        .value_(currentWetness)
         .action_({|obj| 
           chain.setWet(sourceKey, obj.value)
           // OFX_Chain.atSrcDict(sourceKey).postln.level = obj.value
         });
 
-        guiObjects[sourceKey][\wetnessSlider] = wetness;
-        guiObjects[sourceKey][\toggleSlotButton] = toggleSlotButton;
-
-
     // Set slider after the fact
-    // wetness.valueAction_(currentLevel);
+    // wetness.valueAction_(currentWetness);
+
+    guiObjects[sourceKey][\wetnessSlider] = wetness;
+    guiObjects[sourceKey][\toggleSlotButton] = toggleSlotButton;
 
     // @FIXME Doesn't actually work
     // var blankSpace = [nil];
     ^VLayout(
-      HLayout(toggleSlotButton, wetness, randomizeSectionButton), parameterSliders, blankSpace
+      HLayout(toggleSlotButton, wetness, randomizeSectionButton), 
+      parameterSliders, 
+      blankSpace
     )
   }
 
   makePresetSection{
-    ^HLayout(*[
-      // Save
+
+    var buttons = HLayout(*[
+
+      // Add
       Button.new()
-      .states_([["save"], ["save"]])
-      .action_({|obj| if(obj.value == 1, { 
-        "not implemented yet".warn
-      })}),
+      .states_([["add"], ["add"]])
+      .action_({|obj|  
+        // var name = Date.getDate.stamp.asString;
+        var name = Date.getDate.format("ofx%d%m%Y%H%M%S");
+        preset.addSet(name);
+        guiObjects[\main][\presetList].items = preset.settingNames
+      }),
 
       // Load
+      // Button.new()
+      // .states_([["load"], ["load"]])
+      // .action_({|obj| 
+      //   // @TODO
+      // }),
+
+      // Save
       Button.new()
-      .states_([["load"], ["load"]])
-      .action_({|obj| if(obj.value == 1, { "not implemented yet".warn })}),
+      .states_([["write"], ["write"]])
+      .action_({|obj| 
+        preset.writeSettings();
+      }),
+
+      // read
+      Button.new()
+      .states_([["read"], ["read"]])
+      .action_({|obj| 
+        preset.loadSettings;
+        guiObjects[\main][\presetList].items = preset.settingNames
+      }),
 
       // Open
       Button.new()
       .states_([["open"], ["open"]])
-      .action_({|obj| if(obj.value == 1, { "not implemented yet".warn })}),
+      .action_({|obj| 
+        "not implemented yet".warn }),
+      ]);
 
-    ])
-  }
+      var presetList = ListView.new()
+      .selectionMode_(\single)
+      .items_(preset.settingNames ? [])
+      .action_{|obj| 
+        var settingName = obj.item.asSymbol;
+        preset.setCurr(settingName)
+      };
+
+      var title = StaticText.new().string_("presets:");
+
+      guiObjects[\main] = guiObjects[\main] ? IdentityDictionary.new;
+      guiObjects[\main][\presetList] = presetList;
+
+      ^VLayout(title, buttons, presetList)
+    }
 
   makeTransportSection{
     ^HLayout(*[
@@ -238,7 +282,7 @@ OFX_ChainGui{
     var wetVal = chain.getWet(slotName);
     var guiVal = guiObjects[slotName][\wetnessSlider].value;
 
-    if( wetVal != guiVal,{ 
+    if( wetVal != guiVal and: { wetVal.notNil },{ 
       guiObjects[slotName][\wetnessSlider].value_(wetVal)
     });
 
@@ -321,16 +365,17 @@ OFX_ChainGui{
 
     sliders = params.collect{|paramName|
       var spec = chain.getSpecForSourceAndParam(sourceName, paramName) ;
-      var currentLevel = spec.unmap(
-        chain.getActiveParamValAt(sourceName, paramName) ? 0
+      var rawVal= chain.getActiveParamValAt(sourceName, paramName) ?  0; //? chain.proxy.nodeMap() ? 0; 
+      var currentWetness = spec.unmap(
+        rawVal ? 0
       );
 
       var valueLabel = NumberBox.new()
-      .value_(currentLevel);
+      .value_(rawVal);
 
       var slider = Slider.new()
       .orientation_(\horizontal)
-      .value_(currentLevel)
+      .value_(currentWetness)
       .action_({|obj| 
         var val = spec.map(obj.value);
 

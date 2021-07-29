@@ -67,7 +67,7 @@ OFX_ChainPreset {
 	}
 
 	writeSettings { settings.write }
-	loadSettings { settings.load }
+	loadSettings {|path, keep = false, doneFunc| settings.read(path, keep, doneFunc) }
 
 	// HH added methods for setCurrByIndex, stepCurr, and, later, xset!
 	setCurrByIndex { |index=0, absolute = true, except|
@@ -86,7 +86,7 @@ OFX_ChainPreset {
 
 	// set immediately for now
 	setCurr { |setName, absolute = true, except|
-		var newset = settings.at(setName);
+		var newset = settings.at(setName) ?? { var index = this.settingIndex(setName.asString); settings.at(index)};
 		var keysValues, newSlotNames, slotNamesToRemove;
 		if (newset.isNil) {
 			"%: no preset named %!\n".postf(this, setName.cs);
