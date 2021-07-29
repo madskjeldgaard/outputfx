@@ -6,6 +6,11 @@ OFX_Chain {
 
 	var <slotNames, <slotsInUse, <proxy, <sources;
 
+    *loadDefaultChains{
+      var pkgPath = Main.packages.asDict.at('OutputFX');
+      load(pkgPath +/+ "chains/default.scd")
+    }
+
 	*initClass {
 		allSources = ();
 		sourceDicts = ();
