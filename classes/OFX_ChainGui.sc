@@ -3,9 +3,10 @@
 The gui is controlled has a timer (SkipJack) attached. It checks whether the gui objects are out of sync with the proxy. If it is, it will copy the proxy's values to the gui objects' data space.
 
 TODO: 
-- Does not work if one of slots is inactive
-- Make reactive to slotnames changing
+
+- Presets: Allow writing and loading presets, and allow loading them using `.xset`
 - Check for new parameters / items (is that even possible after defining the proxychain?)
+- Randomization button
 
 */
 
@@ -14,20 +15,21 @@ OFX_ChainGui{
 
   var title, sourceKeys, slotSections,transportButtons, presetButtons;
 
-  *new{|proxychain, isMainOutput=false| 
-    ^super.new.init(proxychain, isMainOutput)
+  *new{|proxychain| 
+    ^super.new.init(proxychain)
   }
 
-  init{|proxychain, isMainOutput|
+  init{|proxychain|
     chain = if(
       proxychain.isKindOf(OFX_OutputFX), 
       { 
+        isMain = true;
         proxychain.proxyChain 
       }, { 
+        isMain = false;
         proxychain 
       });
 
-    isMain = isMainOutput;
 
     this.makeGui();
 
