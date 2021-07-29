@@ -26,7 +26,7 @@ OFX_Chain {
 		var dict = this.atSrcDict(srcName);
 		this.addSource(srcName, source);
 		this.addLevel(srcName, level);
-		this.addSpecs(srcName, specs);
+		this.addSpecs(srcName, specs, source);
 		this.checkSourceDictAt(srcName);
 	}
 
@@ -39,7 +39,7 @@ OFX_Chain {
 			allSources.put(srcName, source);
 
 			dict.put(\source, source);
-			srcFunc = if (source.isKindOf(Association)) { source.value } { source };
+			srcFunc = this.prgetSourceFuncFromSource(source);
             
             // @FIXME this does not work with NamedControl
 			paramNames = srcFunc.argNames.as(Array);
@@ -53,12 +53,31 @@ OFX_Chain {
 		if (level.notNil) { dict.put(\level, level) }
 	}
 
-	*addSpecs { |srcName, specs, srcDict|
+    *prgetSourceFuncFromSource{|source|
+      if (source.isKindOf(Association)) { 
+        ^source.value 
+        } { 
+          ^source 
+        };
+    }
+
+    *prGetNamedControlSpecs{|source|
+      var sourceFunc = this.prgetSourceFuncFromSource(source);
+      ^sourceFunc.asSynthDef.asSynthDesc.specs.postln
+    }
+
+	*addSpecs { |srcName, specs, source|
 		var dict = this.atSrcDict(srcName);
-		var specDict;
+		var specDict, namedControlSpecs;
 
 		if (specs.notNil) {
-			specDict = dict[\specs] ?? { () };
+            
+          specDict = dict[\specs] ?? { () };
+
+          // @FIXME does not work because `in` is not understood as a proxy
+          // namedControlSpecs = this.prGetNamedControlSpecs(source);
+          // specDict = specDict ++ namedControlSpecs;
+
 			dict.put(\specs, specDict);
 
 			specs.keysValuesDo { |parkey, spec|
@@ -351,8 +370,15 @@ OFX_Chain {
         }, {
           value.flatten[1]
         });
+
       });
 
+    }
+
+    // @TODO does not work if slotNames is changed after the fact
+    // Get the wetness control for a particular slot
+    getWetControlKey{|slotName|
+      ^this.keysValuesAt(slotName).select({|pair| var paramName = pair[0]; paramName.asString[0..2] == "wet" }).flatten[0]
     }
 
 	keysValuesAt { |slotName|
