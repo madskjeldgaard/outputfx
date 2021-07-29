@@ -114,6 +114,14 @@ OFX_ChainGui{
     // @TODO: make blank space flexible 
     var blankSpace = 12;
 
+    var randomizeSectionButton = Button.new() 
+    .states_([
+      ["randomize"],
+    ])
+    .action_({|obj| 
+        chain.randomizeSlot(sourceKey)
+    });
+
 
     // Set slider after the fact
     wetness.valueAction_(currentLevel);
@@ -121,7 +129,7 @@ OFX_ChainGui{
     // @FIXME Doesn't actually work
     // var blankSpace = [nil];
     ^VLayout(
-      HLayout(toggleSlotButton, wetness), parameterSliders, blankSpace
+      HLayout(toggleSlotButton, wetness, randomizeSectionButton), parameterSliders, blankSpace
     )
   }
 
