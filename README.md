@@ -1,5 +1,7 @@
 # OutputFX
 
-Easily manage output effect chains on the main output of SuperCollider.
+Easily manage output effect chains in SuperCollider.
 
-This package is a simplified and slimmed down fork of the legendary [JITLibExtensions](https://github.com/supercollider-quarks/JITLibExtensions) with focus on the effect chain features it has, mainly what was ProxyChain, ProxyChainPreset, StoredList and MainFX in the original.
+This package started out as a hard fork of the legendary [JITLibExtensions](https://github.com/supercollider-quarks/JITLibExtensions) but has since then evolved to it's own thing. 
+
+See a [video of this thing in action here](https://vimeo.com/580897990)
