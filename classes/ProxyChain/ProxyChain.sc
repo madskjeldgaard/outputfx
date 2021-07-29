@@ -188,7 +188,7 @@ OFX_Chain {
 
         this.setWetForFunc(func, index, wet)
       }, { 
-        "Slot % is not active".format(slotName).warn
+        // "Slot % is not active".format(slotName).warn
       })
     }
 
@@ -309,7 +309,6 @@ OFX_Chain {
       ^this.isSlotActive(slotName).if({
         var value = this.keysValuesAt(slotName)
         .select{|i| 
-          i.postln;
           i[0] == paramName 
         };
 

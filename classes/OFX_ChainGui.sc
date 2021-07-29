@@ -167,12 +167,12 @@ OFX_ChainGui{
     chain.slotNames.do{|slotName|
       var proxyValues = chain.keysValuesAt(slotName);
 
-      "Making gui data for slot %".format(slotName).postln;
-      if(proxyValues.isNil or: { proxyValues.isEmpty }, { "Nothing in proxyValues for %".format(slotName).warn });
+      // "Making gui data for slot %".format(slotName).postln;
+      // if(proxyValues.isNil or: { proxyValues.isEmpty }, { "Nothing in proxyValues for %".format(slotName).warn });
       proxyValues.do{|pair|
         var key = pair[0];
         var val = pair[1];
-        "Adding %, % to guiData".format(key, val).postln;
+        // "Adding %, % to guiData".format(key, val).postln;
         guiData[slotName][key] = val ?? 0
       }
     }
@@ -182,7 +182,7 @@ OFX_ChainGui{
     SkipJack.new(
       updateFunc: {
         if(this.isProxyInSync().not, { 
-          "Remaking gui".postln;
+          // "Remaking gui".postln;
           this.makeGui;
         });
 
@@ -200,7 +200,7 @@ OFX_ChainGui{
     var chainSlots = chain.slotsInUse;
 
     if(slotsInUse != chainSlots,{ 
-      "New slots became active. Old slots: %, new slots: %".format(slotsInUse, chainSlots).postln;
+      // "New slots became active. Old slots: %, new slots: %".format(slotsInUse, chainSlots).postln;
       slotsInUse = chain.slotsInUse.copy;
       ^true
     }, { ^false });
@@ -242,7 +242,7 @@ OFX_ChainGui{
           var spec = this.getSpecForSourceAndParam(sourceName, key);
           var unmapped = spec.unmap(proxyval);
 
-          "val: %, proxyval: %".format(val, proxyval).postln;
+          // "val: %, proxyval: %".format(val, proxyval).postln;
           guiData[sourceName][key] = proxyval;
           guiObject.slider.value_(unmapped);
           guiObject.valueLabel.value_(unmapped);
@@ -271,7 +271,7 @@ OFX_ChainGui{
 
     guiData[sourceName] = guiData[sourceName] ?? IdentityDictionary.new;
 
-    if(params.isEmpty, { "No parameters found for %".format(sourceName).warn });
+    // if(params.isEmpty, { "No parameters found for %".format(sourceName).warn });
 
     sliders = params.collect{|paramName|
       var spec = this.getSpecForSourceAndParam(sourceName, paramName) ;

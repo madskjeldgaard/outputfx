@@ -31,7 +31,7 @@ OFX_Chain.add3(
 			highcut: 2000.0
 		);
 	},
-	level: 0.1,
+	level: 0.5,
 	specs: (
 		time: [0.0001,100.0,\exp],
 		damp: [0.0,1.0,\lin],
