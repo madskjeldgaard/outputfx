@@ -48,7 +48,7 @@ OFX_ChainGui{
     window = window ?? {Window.new(name: this.winName)};
     window.view.removeAll;
 
-    guiObjects = IdentityDictionary.new;
+    guiObjects = guiObjects ?? { IdentityDictionary.new };
     guiData = guiData ?? { IdentityDictionary.new };
 
     slotNames = chain.slotNames.copy();
@@ -82,6 +82,7 @@ OFX_ChainGui{
   }
 
   makeSlotSection{|sourceKey|
+    var wetness;
     var toggleSlotButton = Button.new() 
     .states_([
       [sourceKey, Color.black, Color.red],
@@ -100,13 +101,21 @@ OFX_ChainGui{
       })
     });
 
-    var currentLevel = OFX_Chain.atSrcDict(sourceKey).level;
-    var wetness = Slider.new()
-    .orientation_(\horizontal)
-    .action_({|obj| 
-      chain.setWet(sourceKey, obj.value)
-      // OFX_Chain.atSrcDict(sourceKey).postln.level = obj.value
-    });
+    var currentLevel =  OFX_Chain.atSrcDict(sourceKey).level;
+    // var currentLevel = if(guiObjects.notNil && guiObjects.isEmpty.not, { 
+    //   if(guiObjects[sourceKey][\wetnessSlider].notNil, {
+    //     guiObjects[sourceKey][\wetnessSlider].value
+    //     }, {
+    //       OFX_Chain.atSrcDict(sourceKey).level
+    //     })
+    // });
+
+    // var wetness = Slider.new()
+    // .orientation_(\horizontal)
+    // .action_({|obj| 
+    //   chain.setWet(sourceKey, obj.value)
+    //   // OFX_Chain.atSrcDict(sourceKey).postln.level = obj.value
+    // });
 
     var parameterSliders = VLayout(
       *this.slidersForSlot(sourceKey)
@@ -123,9 +132,19 @@ OFX_ChainGui{
         chain.randomizeSlot(sourceKey)
     });
 
+    wetness = Slider.new()
+        .orientation_(\horizontal)
+        .action_({|obj| 
+          chain.setWet(sourceKey, obj.value)
+          // OFX_Chain.atSrcDict(sourceKey).postln.level = obj.value
+        });
+
+        guiObjects[sourceKey][\wetnessSlider] = wetness;
+        guiObjects[sourceKey][\toggleSlotButton] = toggleSlotButton;
+
 
     // Set slider after the fact
-    wetness.valueAction_(currentLevel);
+    // wetness.valueAction_(currentLevel);
 
     // @FIXME Doesn't actually work
     // var blankSpace = [nil];
@@ -199,6 +218,7 @@ OFX_ChainGui{
   makeSkipjack {
     SkipJack.new(
       updateFunc: {
+
         if(this.isProxyInSync().not, { 
           // "Remaking gui".postln;
           this.makeGui;
@@ -212,6 +232,16 @@ OFX_ChainGui{
       stopTest: { window.isNil or: { window.isClosed } },  
       name: chain.key,  
     );
+  }
+
+  checkWetness{|slotName|
+    var wetVal = chain.getWet(slotName);
+    var guiVal = guiObjects[slotName][\wetnessSlider].value;
+
+    if( wetVal != guiVal,{ 
+      guiObjects[slotName][\wetnessSlider].value_(wetVal)
+    });
+
   }
 
   checkSlotActivity{
@@ -250,7 +280,7 @@ OFX_ChainGui{
       var key = pair[0];
       var proxyval = pair[1];
       var val = guiData[sourceName][key];
-      var guiObject = guiObjects[sourceName][key];
+      var guiObject = guiObjects[sourceName][\parameterSliders][key];
       // "guiObject: %".format(~guiObjects[sourceName][key]).postln;
       // "sourcename: %, key: %, val: %".format(sourceName, key, val).postln;
 
@@ -275,6 +305,7 @@ OFX_ChainGui{
 
   checkAllActiveSlots {
     slotNames.do{|slotName| 
+      this.checkWetness(slotName);
       this.checkSlot(slotName) 
     }
   }
@@ -326,7 +357,9 @@ OFX_ChainGui{
       )
     };
 
-    guiObjects.put(sourceName, objectDict);
+    guiObjects[sourceName] = guiObjects[sourceName] ?? { IdentityDictionary.new };
+    guiObjects[sourceName][\parameterSliders] = guiObjects[sourceName][\parameterSliders] ?? { IdentityDictionary.new };
+    guiObjects[sourceName][\parameterSliders] = objectDict;
 
     ^sliders
   }

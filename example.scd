@@ -2,7 +2,7 @@
 
 // Now create the FXChain for the output
 (
-s.doWhenBooted{
+s.waitForBoot{
 Pbind(\dur, 0.075, \degree, Pseq((-10..10),inf), \pan, Pseg(Pseq([-1.0,1.0],inf), 4, \lin, inf)).play;
 
 OFX_Chain.add3(
@@ -48,10 +48,12 @@ m = OFX_OutputFX.new(
 	busIndex: 0
 );
 
-g = OFX_ChainGui.new(m.proxyChain);
-
+m.gui;
 }
 )
+
+g.chain.keysValuesAt(\jpverb)
+
 
 g.didNewSlotsBecomeActive
 
@@ -74,11 +76,20 @@ m.proxyChain.set(\time, rrand(0.1,100));
 g.guiData[\jpverb]
 
 m.proxyChain.keysValuesAt(\jpverb)
-g.guiData
+g.guiData[\jpverb][\size]
 
 // Change size param of verb
 m.set(\size, rrand(0.001,5));
 
 OFX_Chain.atSrcDict(\jpverb)[\source].value.defaultArgs
 
-m.proxyChain.proxy.gui
+m.set(\time, 30)
+
+g.guiObjects[\jpverb][\time][\valueLabel].value
+g.guiData[\jpverb][\time]
+m.proxyChain.getSpecForSourceAndParam(\jpverb, \time).map(rrand(0.0,1.0))
+
+m.proxyChain.getWet(\jpverb)
+
+g.guiObjects[\jpverb][\parameterSliders][\jpverb]
+g.guiObjects[\jpverb][\time].at( \parameterSliders )

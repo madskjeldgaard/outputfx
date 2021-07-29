@@ -192,6 +192,18 @@ OFX_Chain {
       })
     }
 
+    getWet{|slotName|
+      if(this.isSlotActive(slotName), { 
+        var index = this.slotIndexFor(slotName);
+        var func = sources[slotName];
+
+        ^this.getWetForFunc(func, index)
+      }, { 
+        ^nil
+        // "Slot % is not active".format(slotName).warn
+      })
+    }
+
     randomizeSlot{|slotName|
       this.keysValuesAt(slotName).do{|pair| 
         var key = pair[0]; 
@@ -208,6 +220,11 @@ OFX_Chain {
       if (wet.isNil) { wet = prevVal ? 0 };
       // proxy.addSpec(specialKey, \amp.asSpec);
       proxy.set(specialKey, wet);
+    }
+
+    getWetForFunc{|func, index|
+      var specialKey = this.specialKeyForFunc(func, index);
+      ^proxy.nodeMap.at(specialKey);
     }
 
     getSpecForSourceAndParam { |sourceName, paramName|
