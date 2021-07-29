@@ -192,12 +192,28 @@ OFX_Chain {
       })
     }
 
+    randomizeSlot{|slotName|
+      this.keysValuesAt(slotName).do{|pair| 
+        var key = pair[0]; 
+        var val = pair[1]; 
+        var spec = this.getSpecForSourceAndParam(slotName, key);
+
+        this.set(key, spec.map(rrand(0.0,1.0)))
+      };
+    }
+
     setWetForFunc{|func, index, wet|
       var specialKey = this.specialKeyForFunc(func, index);
       var prevVal = proxy.nodeMap.get(specialKey).value;
       if (wet.isNil) { wet = prevVal ? 0 };
       // proxy.addSpec(specialKey, \amp.asSpec);
       proxy.set(specialKey, wet);
+    }
+
+    getSpecForSourceAndParam { |sourceName, paramName|
+      ^OFX_Chain.atSrcDict(sourceName).specs[paramName] 
+      ?? Spec.specs[paramName] 
+      ?? [0.0,1.0].asSpec
     }
 
 	addSlot { |key, index, wet|
@@ -263,10 +279,11 @@ OFX_Chain {
 		all.removeAt(this.key);
 	}
 
-		// JIT gui support
-        gui {
-          this.proxy.gui
-        }
+    // JIT gui support
+    gui {
+      ^OFX_ChainGui.new(this)
+    }
+
 	// gui { |numItems = 16, buttonList, parent, bounds, isMaster = false|
 	// 	^ChainGui(this, numItems, parent, bounds, true, buttonList, isMaster);
 	// }

@@ -248,7 +248,7 @@ OFX_ChainGui{
       }, { 
         // Only have to update the gui - the other way around is always in sync because an action is called
         if(proxyval != val /*or: { val != guiObject[\valueLabel].value }*/, {
-          var spec = this.getSpecForSourceAndParam(sourceName, key);
+          var spec = chain.getSpecForSourceAndParam(sourceName, key);
           var unmapped = spec.unmap(proxyval);
 
           // "val: %, proxyval: %".format(val, proxyval).postln;
@@ -267,12 +267,6 @@ OFX_ChainGui{
     }
   }
 
-  getSpecForSourceAndParam { |sourceName, paramName|
-    ^OFX_Chain.atSrcDict(sourceName).specs[paramName] 
-    ?? Spec.specs[paramName] 
-    ?? [0.0,1.0].asSpec
-  }
-
   slidersForSlot {|sourceName| 
     var sliders, params, objectDict;
     params = OFX_Chain.atSrcDict(sourceName).paramNames;
@@ -283,7 +277,7 @@ OFX_ChainGui{
     // if(params.isEmpty, { "No parameters found for %".format(sourceName).warn });
 
     sliders = params.collect{|paramName|
-      var spec = this.getSpecForSourceAndParam(sourceName, paramName) ;
+      var spec = chain.getSpecForSourceAndParam(sourceName, paramName) ;
       var currentLevel = spec.unmap(
         chain.getActiveParamValAt(sourceName, paramName) ? 0
       );
