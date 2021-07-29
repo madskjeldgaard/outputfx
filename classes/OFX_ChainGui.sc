@@ -2,12 +2,6 @@
 
 The gui is controlled has a timer (SkipJack) attached. It checks whether the gui objects are out of sync with the proxy. If it is, it will copy the proxy's values to the gui objects' data space.
 
-TODO: 
-
-- Wet slider does not intiailize properly (starts at 0)
-- Presets: Allow writing and loading presets, and allow loading them using `.xset`
-- Check for new parameters / items (is that even possible after defining the proxychain?)
-
 */
 
 OFX_ChainGui{
@@ -80,7 +74,24 @@ OFX_ChainGui{
     skipjack =skipjack ?? {this.makeSkipjack()};
 
     this.checkAllActiveSlots();
-    layout = VLayout(title, transportButtons, presetButtons, StaticText.new().string_("slots: "), slotSections);
+    layout = HLayout( 
+      // [VLayout(
+      //   [title, stretch: 1, align: \topLeft], 
+      //   [transportButtons, stretch: 2, align: \topLeft], 
+      //   [presetButtons, stretch: 3, align: \topLeft],
+      //   [nil],
+      //   [nil]
+      // ), \s: 1], 
+      [VLayout(
+        [title, stretch: 1, align: \topLeft], 
+        [transportButtons, stretch: 2, align: \topLeft], 
+        [presetButtons, stretch: 3, align: \topLeft],
+
+        StaticText.new().string_("slots: "), 
+        slotSections
+      ), \s: 3]
+    );
+
     window.layout_(layout);
 
   }
@@ -130,7 +141,7 @@ OFX_ChainGui{
 
     var randomizeSectionButton = Button.new() 
     .states_([
-      ["randomize"],
+      ["rand"],
     ])
     .action_({|obj| 
         chain.randomizeSlot(sourceKey)
@@ -153,11 +164,13 @@ OFX_ChainGui{
 
     // @FIXME Doesn't actually work
     // var blankSpace = [nil];
-    ^VLayout(
-      HLayout(toggleSlotButton, wetness, randomizeSectionButton), 
-      parameterSliders, 
-      blankSpace
-    )
+    ^
+      // VLayout([toggleSlotButton, stretch: 2], wetness, [randomizeSectionButton, stretch: 1]), 
+      VLayout(
+        HLayout([toggleSlotButton, stretch: 2], wetness, [randomizeSectionButton, stretch: 1]),
+        parameterSliders, 
+        blankSpace
+      )
   }
 
   makePresetSection{
