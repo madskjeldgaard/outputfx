@@ -6,6 +6,12 @@ ADDING NEW FX
 - Please prefix them with \ofx_ like you see below
 - Write good specs for everything
 
+SUGGESTED SERVER SETTINGS:
+
+s.options.numWireBufs_(2048);
+s.options.memSize_(2.pow(19));
+s.options.numBuffers_(10000);
+
 */
 (
 
