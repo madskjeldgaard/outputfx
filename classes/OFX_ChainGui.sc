@@ -4,9 +4,9 @@ The gui is controlled has a timer (SkipJack) attached. It checks whether the gui
 
 TODO: 
 
+- Wet slider does not update properly
 - Presets: Allow writing and loading presets, and allow loading them using `.xset`
 - Check for new parameters / items (is that even possible after defining the proxychain?)
-- Randomization button
 
 */
 
@@ -259,13 +259,14 @@ OFX_ChainGui{
       }, { 
         // Only have to update the gui - the other way around is always in sync because an action is called
         if(proxyval != val /*or: { val != guiObject[\valueLabel].value }*/, {
+          // @FIXME: Redundancy - both gui actions and this do mapping/unmapping
           var spec = chain.getSpecForSourceAndParam(sourceName, key);
           var unmapped = spec.unmap(proxyval);
        
           // "val: %, proxyval: %".format(val, proxyval).postln;
           guiData[sourceName][key] = proxyval;
           guiObject.slider.value_(unmapped);
-          guiObject.valueLabel.value_(unmapped);
+          guiObject.valueLabel.value_(proxyval);
         })
 
       })
