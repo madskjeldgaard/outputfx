@@ -240,7 +240,7 @@ OFX_Chain.add3(
 	},
 	level: 1.0,
 	specs: (
-		loss: [0,100], mode: [1, 2]
+		drop: [0,100], mode: [1, 2]
 	)
 );
 
