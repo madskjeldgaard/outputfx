@@ -10,7 +10,7 @@ TODO:
 */
 
 OFX_ChainGui{
-  var <window, chain, <guiObjects, guiData, <skipjack, <isMain, <slotNames;
+  var <window, chain, <guiObjects, <guiData, <skipjack, <isMain, <slotNames, <slotsInUse;
 
   var title, sourceKeys, slotSections,transportButtons, presetButtons;
 
@@ -49,7 +49,9 @@ OFX_ChainGui{
     .font_(Font.default.bold_(true));
 
     slotSections =  VLayout(
-      *slotNames.asArray.collect{|sourceKey, params| this.makeSlotSection(sourceKey, params)}
+      *slotNames.asArray.collect{|sourceKey| 
+        this.makeSlotSection(sourceKey)
+      }
     );
 
     transportButtons = if(isMain, { nil }, {
@@ -68,7 +70,7 @@ OFX_ChainGui{
 
   }
 
-  makeSlotSection{|sourceKey, params|
+  makeSlotSection{|sourceKey|
     var toggleSlotButton = Button.new() 
     .states_([
       [sourceKey, Color.black, Color.red],
@@ -157,12 +159,16 @@ OFX_ChainGui{
   }
 
   makeGuiData {
-    chain.activeSlotNames.do{|slotName|
+    chain.slotNames.do{|slotName|
       var proxyValues = chain.keysValuesAt(slotName);
+
+      "Making gui data for slot %".format(slotName).postln;
+      if(proxyValues.isNil or: { proxyValues.isEmpty }, { "Nothing in proxyValues for %".format(slotName).warn });
       proxyValues.do{|pair|
         var key = pair[0];
         var val = pair[1];
-        guiData[slotName][key] = guiData[slotName][key] ?? chain.getActiveParamValAt(slotName, key) ? 0
+        "Adding %, % to guiData".format(key, val).postln;
+        guiData[slotName][key] = val ?? 0
       }
     }
   }
@@ -175,6 +181,8 @@ OFX_ChainGui{
           this.makeGui;
         });
 
+        if(this.checkSlotActivity(), { this.makeGui });
+
         this.checkAllActiveSlots()
       },  
       dt: 0.1,  
@@ -183,14 +191,26 @@ OFX_ChainGui{
     );
   }
 
+  checkSlotActivity{
+    var chainSlots = chain.slotsInUse;
+
+    if(slotsInUse != chainSlots,{ 
+      "New slots became active. Old slots: %, new slots: %".format(slotsInUse, chainSlots).postln;
+      slotsInUse = chain.slotsInUse.copy;
+      ^true
+    }, { ^false });
+  }
+
   isProxyInSync{
     var status;
-    status = if(
-      slotNames != chain.slotNames, {
-        false 
-      }, { true });
 
-    ^status
+    // Did the slot chain setup change?
+    if(
+      slotNames != chain.slotNames, {
+        ^false 
+      }, { ^true });
+
+      
     // Check if slotnames changed
     // Check if parameters changed
     // Check if specs changed
@@ -245,6 +265,8 @@ OFX_ChainGui{
     objectDict = IdentityDictionary.new;
 
     guiData[sourceName] = guiData[sourceName] ?? IdentityDictionary.new;
+
+    if(params.isEmpty, { "No parameters found for %".format(sourceName).warn });
 
     sliders = params.collect{|paramName|
       var spec = this.getSpecForSourceAndParam(sourceName, paramName) ;

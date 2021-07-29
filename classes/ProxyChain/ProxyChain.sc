@@ -283,6 +283,7 @@ OFX_Chain {
 
 	orderIndexFor { |slotName|
 		var rawIndex = this.activeSlotNames.indexOf(slotName);
+
 		if (rawIndex.isNil) {
 			// "%: no active slot named %!\n".postf(this, slotName.cs);
             
@@ -294,6 +295,7 @@ OFX_Chain {
 	keysAt { |slotName|
 		var orderIndex = this.orderIndexFor(slotName);
 		var obj, names;
+
 		if (orderIndex.isNil) { ^nil };
 
 		obj = proxy.objects[orderIndex];

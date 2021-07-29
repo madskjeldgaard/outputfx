@@ -1,8 +1,10 @@
 // First, a source sound for testing
-Pbind(\dur, 0.075, \degree, Pseq((-10..10),inf), \pan, Pseg(Pseq([-1.0,1.0],inf), 4, \lin, inf)).play;
 
 // Now create the FXChain for the output
 (
+s.doWhenBooted{
+Pbind(\dur, 0.075, \degree, Pseq((-10..10),inf), \pan, Pseg(Pseq([-1.0,1.0],inf), 4, \lin, inf)).play;
+
 OFX_Chain.add3(
     srcName: \pitchshift, 
 	source: \filter -> { |in| 
@@ -16,11 +18,11 @@ OFX_Chain.add3(
 
 OFX_Chain.add3(
     srcName: \jpverb, 
-	source: \filter -> { |in| 
+	source: \filter -> { |in, time=10, damp=0.5, size=3| 
 		JPverb.ar(
 			in: in,  
-			t60: \time.kr(10, spec: [0.0001,100.0,\exp]),  
-			damp: \damp.kr(0.25),  size: \size.kr(1),  earlyDiff: 0.707,  modDepth: \modDepth.kr(0.25),  
+			t60: time,  
+			damp: damp,  size: size,  earlyDiff: 0.707,  modDepth: \modDepth.kr(0.25),  
 			modFreq: \modFreq.kr(0.1, spec: [0.0,10.0]),  
 			low: 1.0,  
 			mid: 1.0,  
@@ -30,13 +32,14 @@ OFX_Chain.add3(
 		);
 	},
 	level: 0.1,
-	// specs: (
-	// 	time: [0.0001,100.0,\exp]
-	// )
+	specs: (
+		time: [0.0001,100.0,\exp],
+		damp: [0.0,1.0,\lin],
+		size: [0.0001,5.0,\exp]
+
+	)
 );
 
-)
-(
 // Now add the fx chain to the output
 m = OFX_OutputFX.new(
 	server: s,
@@ -45,7 +48,19 @@ m = OFX_OutputFX.new(
 	busIndex: 0
 );
 
+g = OFX_ChainGui.new(m.proxyChain);
+
+}
 )
+
+g.didNewSlotsBecomeActive
+
+OFX_Chain.atSrcDict(\jpverb).keys
+
+m.proxyChain.keysValuesAt(\jpverb)
+g.slotNames
+
+m.proxyChain.slotNames = [ \jpverb]
 
 // You won't hear anything yet because the fx haven't been activated, this is done using .add:
 m.add(\jpverb, 0.3);
@@ -55,7 +70,15 @@ m.add(\pitchshift, 0.25);
 m.set(\pitch, 4);
 
 // Change time param of verb
-m.set(\time, rrand(1,50));
+m.proxyChain.set(\time, rrand(0.1,100));
+g.guiData[\jpverb]
+
+m.proxyChain.keysValuesAt(\jpverb)
+g.guiData
 
 // Change size param of verb
 m.set(\size, rrand(0.001,5));
+
+OFX_Chain.atSrcDict(\jpverb)[\source].value.defaultArgs
+
+m.proxyChain.proxy.gui
