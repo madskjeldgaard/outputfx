@@ -19,7 +19,14 @@ OFX_ChainGui{
   }
 
   init{|proxychain, isMainOutput|
-    chain = proxychain;
+    chain = if(
+      proxychain.isKindOf(OFX_OutputFX), 
+      { 
+        proxychain.proxyChain 
+      }, { 
+        proxychain 
+      });
+
     isMain = isMainOutput;
 
     this.makeGui();
