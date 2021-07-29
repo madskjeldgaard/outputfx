@@ -11,7 +11,7 @@ TODO:
 */
 
 OFX_ChainGui{
-  var <window, chain, <guiObjects, <guiData, <skipjack, <isMain, <slotNames, <slotsInUse;
+  var <window, <chain, <guiObjects, <guiData, <skipjack, <isMain, <slotNames, <slotsInUse;
 
   var title, sourceKeys, slotSections,transportButtons, presetButtons;
 
@@ -24,6 +24,7 @@ OFX_ChainGui{
       proxychain.isKindOf(OFX_OutputFX), 
       { 
         isMain = true;
+        "Is main output".postln;
         proxychain.proxyChain 
       }, { 
         isMain = false;
@@ -243,6 +244,8 @@ OFX_ChainGui{
   checkSlot {|sourceName|
     var proxyValues = chain.keysValuesAt(sourceName);
 
+    // if(proxyValues.isNil, { "no proxy values for %".format(sourceName).warn });
+
     proxyValues.do{|pair|
       var key = pair[0];
       var proxyval = pair[1];
@@ -258,7 +261,7 @@ OFX_ChainGui{
         if(proxyval != val /*or: { val != guiObject[\valueLabel].value }*/, {
           var spec = chain.getSpecForSourceAndParam(sourceName, key);
           var unmapped = spec.unmap(proxyval);
-
+       
           // "val: %, proxyval: %".format(val, proxyval).postln;
           guiData[sourceName][key] = proxyval;
           guiObject.slider.value_(unmapped);
@@ -271,7 +274,7 @@ OFX_ChainGui{
 
   checkAllActiveSlots {
     slotNames.do{|slotName| 
-      this.checkSlot(chain, slotName) 
+      this.checkSlot(slotName) 
     }
   }
 
