@@ -56,11 +56,7 @@ OFX_ChainGui{
     .string_(chain.key)
     .font_(Font.default.bold_(true));
 
-    slotSections =  VLayout(
-      *slotNames.asArray.collect{|sourceKey| 
-        this.makeSlotSection(sourceKey)
-      }
-    );
+    slotSections = this.makeAllSlotSections(6);
 
     // @TODO
     // transportButtons = if(isMain, { nil }, {
@@ -96,8 +92,16 @@ OFX_ChainGui{
 
   }
 
+  makeAllSlotSections{|clumpInto=3|
+    ^VLayout(
+      *slotNames.asArray.clump(clumpInto).collect{|clumpedSlots|
+        HLayout(*clumpedSlots.collect{|sourceKey| this.makeSlotSection(sourceKey) })
+      }
+    )
+  }
+
   makeSlotSection{|sourceKey|
-    var wetness;
+    var wetness, items;
     var toggleSlotButton = Button.new() 
     .states_([
       [sourceKey, Color.black, Color.red],
@@ -162,15 +166,21 @@ OFX_ChainGui{
     guiObjects[sourceKey][\wetnessSlider] = wetness;
     guiObjects[sourceKey][\toggleSlotButton] = toggleSlotButton;
 
+    items = [
+      HLayout([toggleSlotButton, stretch: 2], [randomizeSectionButton, stretch: 1]), 
+      wetness,
+      parameterSliders, 
+      // blankSpace
+    ];
+
+    items = items.collect{ |item| [item, align: \top]};
+ 
+
     // @FIXME Doesn't actually work
     // var blankSpace = [nil];
     ^
       // VLayout([toggleSlotButton, stretch: 2], wetness, [randomizeSectionButton, stretch: 1]), 
-      VLayout(
-        HLayout([toggleSlotButton, stretch: 2], wetness, [randomizeSectionButton, stretch: 1]),
-        parameterSliders, 
-        blankSpace
-      )
+      [VLayout(*items), align: \top]
   }
 
   makePresetSection{
