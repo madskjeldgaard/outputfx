@@ -134,15 +134,17 @@ OFX_Chain.add3(
 			var mod = SinOsc.ar(ringf);
 			ring1(in, mod);
 		}, 
-	specs: (ringf: Spec.specs[\freq])
+	specs: (ringf: Spec.specs[\widefreq])
 );
 
 // A time machine effect (inspired by Make Noise' mimeophone)
+// @FIXME: sometimes leads to nan?
 OFX_Chain.add3(
 	srcName: \ofx_timemachine,
 	source: \filter -> {|in, offset=0, reclvl=0.5, prelvl=0.5, timerate=0.5, fb=0.25, record=1, jumpToStart=1|
 		var numchans = in.size;
-		var local = LocalBuf(44100 * 16, numChannels: numchans).clear;
+		var tapeLengthInSeconds = 4;
+		var local = LocalBuf(44100 * tapeLengthInSeconds, numChannels: numchans).clear;
 		var sig;
 		var feedback = LocalIn.ar(fb * in, numChannels: numchans).tanh;
 
@@ -151,7 +153,7 @@ OFX_Chain.add3(
 		sig = PlayBuf.ar(numchans, local, timerate, 1.0, 0.0, 1.0, doneAction: 0);
 		sig = LeakDC.ar(sig);
 
-		LocalOut.ar(LeakDC.ar(sig));
+		LocalOut.ar(sig);
 
 		sig
 	},
@@ -220,7 +222,7 @@ OFX_Chain.add3(
 	source: \filter -> {|in, chpredelay=0.08, chrate=0.05, chdepth=0.1, chphasediff=0.5|
 		var sig, numDelays = 4;
 		var numchans = in.size;
-		var maxdelay = 0.5;
+		var maxdelay = 0.05;
 
 		sig = Array.fill(numchans, {|cNum|
 			var input = in[cNum] * numDelays.reciprocal;
