@@ -98,6 +98,7 @@ OFX_OutputFX {
 
 	init { |inServer, inNumChannels, inSlotNames, inBusIndex|
 		var proxy;
+        OFX_Chain.loadDefaultChains();
 		server = inServer ? Server.default;
 		numChannels = inNumChannels ? server.options.numOutputBusChannels;
 		busIndex = inBusIndex ? 0;

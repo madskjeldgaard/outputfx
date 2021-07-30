@@ -3,18 +3,23 @@ OFX_Chain {
 	classvar <allSources;
 	classvar <sourceDicts;
 	classvar <all;
+    classvar defaultsLoaded;
 
 	var <slotNames, <slotsInUse, <proxy, <sources;
 
     *loadDefaultChains{
-      var pkgPath = Main.packages.asDict.at('OutputFX');
-      load(pkgPath +/+ "chains/default.scd")
+      if(defaultsLoaded.not, {
+        var pkgPath = Main.packages.asDict.at('OutputFX');
+        load(pkgPath +/+ "chains/default.scd");
+        defaultsLoaded = true;
+      })
     }
 
 	*initClass {
 		allSources = ();
 		sourceDicts = ();
 		all = ();
+        defaultsLoaded = false;
 
 		// this.addSpec;
 	}
@@ -152,6 +157,8 @@ OFX_Chain {
 		if (key.notNil) { all.put(key, res) };
 
 		if(slotNames.notNil) { res.slotNames_(slotNames) };
+
+        this.loadDefaultChains();
 
 		^res
 	}
