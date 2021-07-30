@@ -70,7 +70,7 @@ OFX_ChainGui{
     skipjack =skipjack ?? {this.makeSkipjack()};
 
     this.checkAllActiveSlots();
-    layout = HLayout( 
+    layout = VLayout( 
       // [VLayout(
       //   [title, stretch: 1, align: \topLeft], 
       //   [transportButtons, stretch: 2, align: \topLeft], 
@@ -78,14 +78,16 @@ OFX_ChainGui{
       //   [nil],
       //   [nil]
       // ), \s: 1], 
-      [VLayout(
-        [title, stretch: 1, align: \topLeft], 
-        [transportButtons, stretch: 2, align: \topLeft], 
-        [presetButtons, stretch: 3, align: \topLeft],
 
-        StaticText.new().string_("slots: "), 
-        slotSections
-      ), \s: 3]
+      [title, stretch: 1, align: \topLeft],
+      HLayout(
+        [transportButtons, stretch: 2, align: \topLeft], 
+
+        // StaticText.new().string_("slots: "), 
+        slotSections,
+
+        [presetButtons, stretch: 3, align: \topLeft],
+      )
     );
 
     window.layout_(layout);
@@ -173,7 +175,7 @@ OFX_ChainGui{
       // blankSpace
     ];
 
-    items = items.collect{ |item| [item, align: \top]};
+    items = items.collect{ |item| [item, stretch: 1, align: \top]};
  
 
     // @FIXME Doesn't actually work
