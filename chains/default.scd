@@ -139,10 +139,8 @@ OFX_Chain.add3(
 
 // A time machine effect (inspired by Make Noise' mimeophone)
 // @FIXME: sometimes leads to nan?
-OFX_Chain.add3(
-	srcName: \ofx_timemachine,
-	source: \filter -> {|in, offset=0, reclvl=0.5, prelvl=0.5, timerate=0.5, fb=0.25, record=1, jumpToStart=1|
-		var numchans = in.size;
+~timeMachineFunc = {|numchans|
+	{|in, offset=0, reclvl=0.5, prelvl=0.5, timerate=0.5, fb=0.25, record=1, jumpToStart=1, damp=0.25|
 		var tapeLengthInSeconds = 4;
 		var local = LocalBuf(44100 * tapeLengthInSeconds, numChannels: numchans).clear;
 		var sig;
@@ -153,15 +151,23 @@ OFX_Chain.add3(
 		sig = PlayBuf.ar(numchans, local, timerate, 1.0, 0.0, 1.0, doneAction: 0);
 		sig = LeakDC.ar(sig);
 
-		LocalOut.ar(sig);
+		LocalOut.ar(LPF.ar(sig, damp.linexp(0.000000001,1.0,20000.0,250.0)));
 
 		sig
-	},
-	level: 0.5,
-	specs: (
-		offset: [0.0, 1.0], reclvl: [0.0, 1.0], prelvl: [0.0, 1.0], timerate: [-10.0, 10.0], fb: [0.0, 1.0], record: [0.0, 1.0], jumpToStart: [0.0, 1.0],
-	)
-);
+	}
+};
+
+(1..4).do{|numChans|
+	OFX_Chain.add3(
+		srcName: "ofx_timemachine%".format(numChans).asSymbol,
+		source: \filter -> ~timeMachineFunc.value(numChans),
+		level: 0.5,
+		specs: (
+			offset: [0.0, 1.0], reclvl: [0.0, 1.0], prelvl: [0.0, 1.0], timerate: [-10.0, 10.0], fb: [0.0, 1.0], record: [0.0, 1.0], jumpToStart: [0.0, 1.0],
+		damp: [0.0, 1.0])
+	);
+
+};
 
 // Phaser taken from SuperDirt and modified
 // https://github.com/musikinformatik/SuperDirt/blob/develop/synths/core-synths.scd
