@@ -9,8 +9,9 @@ OFX_Chain {
 
     *loadDefaultChains{
       if(defaultsLoaded.not, {
-        var pkgPath = Main.packages.asDict.at('OutputFX');
-        load(pkgPath +/+ "chains/default.scd");
+			var pkgPath = PathName(Quarks.quarkNameAsLocalPath("outputfx"));
+			var defaults = pkgPath +/+ PathName("chains") +/+ PathName("default.scd");
+		load(defaults.fullPath);
         defaultsLoaded = true;
       })
     }
@@ -50,7 +51,7 @@ OFX_Chain {
 
 			dict.put(\source, source);
 			srcFunc = this.prgetSourceFuncFromSource(source);
-            
+
             // @FIXME this does not work with NamedControl
 			paramNames = srcFunc.argNames.as(Array);
 			paramNames.remove(\in);
@@ -64,10 +65,10 @@ OFX_Chain {
 	}
 
     *prgetSourceFuncFromSource{|source|
-      if (source.isKindOf(Association)) { 
-        ^source.value 
-        } { 
-          ^source 
+      if (source.isKindOf(Association)) {
+        ^source.value
+        } {
+          ^source
         };
     }
 
@@ -81,7 +82,7 @@ OFX_Chain {
 		var specDict, namedControlSpecs;
 
 		if (specs.notNil) {
-            
+
           specDict = dict[\specs] ?? { () };
 
           // @FIXME does not work because `in` is not understood as a proxy
@@ -93,9 +94,9 @@ OFX_Chain {
 			specs.keysValuesDo { |parkey, spec|
 				var newspec;
 				if (spec.isKindOf(Array)) { newspec = spec.asSpec };
-				newspec = newspec ?? { 
+				newspec = newspec ?? {
                   spec.asSpec
-                // this.getSpec(spec) ?? { spec.asSpec } 
+                // this.getSpec(spec) ?? { spec.asSpec }
                 };
 				if (newspec.isNil) {
 					"%: spec conversion at % - % failed!\n".postf(this, srcName.cs,  parkey.cs)
@@ -212,33 +213,33 @@ OFX_Chain {
     }
 
     setWet{|slotName, wet|
-      if(this.isSlotActive(slotName), { 
+      if(this.isSlotActive(slotName), {
         var index = this.slotIndexFor(slotName);
 
         var func = sources[slotName];
 
         this.setWetForFunc(func, index, wet)
-      }, { 
+      }, {
         // "Slot % is not active".format(slotName).warn
       })
     }
 
     getWet{|slotName|
-      if(this.isSlotActive(slotName), { 
+      if(this.isSlotActive(slotName), {
         var index = this.slotIndexFor(slotName);
         var func = sources[slotName];
 
         ^this.getWetForFunc(func, index)
-      }, { 
+      }, {
         ^nil
         // "Slot % is not active".format(slotName).warn
       })
     }
 
     randomizeSlot{|slotName|
-      this.keysValuesAt(slotName).do{|pair| 
-        var key = pair[0]; 
-        var val = pair[1]; 
+      this.keysValuesAt(slotName).do{|pair|
+        var key = pair[0];
+        var val = pair[1];
         var spec = this.getSpecForSourceAndParam(slotName, key);
 
         this.set(key, spec.map(rrand(0.0,1.0)))
@@ -259,8 +260,8 @@ OFX_Chain {
     }
 
     getSpecForSourceAndParam { |sourceName, paramName|
-      ^OFX_Chain.atSrcDict(sourceName).specs[paramName] 
-      ?? Spec.specs[paramName] 
+      ^OFX_Chain.atSrcDict(sourceName).specs[paramName]
+      ?? Spec.specs[paramName]
       ?? [0.0,1.0].asSpec
     }
 
@@ -342,7 +343,7 @@ OFX_Chain {
 
     isSlotActive{|slotName| ^slotsInUse.array.indexOfEqual(slotName).isNil.not }
 
-	slotIndexFor { |slotName| 
+	slotIndexFor { |slotName|
       ^slotNames.indexOf(slotName)
     }
 
@@ -351,7 +352,7 @@ OFX_Chain {
 
 		if (rawIndex.isNil) {
 			// "%: no active slot named %!\n".postf(this, slotName.cs);
-            
+
 			^nil
 		};
 		^slotsInUse.indices[rawIndex];
@@ -373,12 +374,12 @@ OFX_Chain {
     getActiveParamValAt{|slotName, paramName|
       ^this.isSlotActive(slotName).if({
         var value = this.keysValuesAt(slotName)
-        .select{|i| 
-          i[0] == paramName 
+        .select{|i|
+          i[0] == paramName
         };
 
-        if(value.isNil, { 
-          "Chain: % is nil".format(paramName).warn 
+        if(value.isNil, {
+          "Chain: % is nil".format(paramName).warn
         }, {
           value.flatten[1]
         });
