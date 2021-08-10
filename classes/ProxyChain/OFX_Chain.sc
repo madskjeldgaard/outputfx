@@ -8,11 +8,21 @@ OFX_Chain {
 	var <slotNames, <slotsInUse, <proxy, <sources;
 
     *loadDefaultChains{
+      var pkgPath = PathName(Quarks.quarkNameAsLocalPath("outputfx"));
+      var defaults = pkgPath +/+ PathName("chains") +/+ PathName("default.scd");
+      var hoa = pkgPath +/+ PathName("chains") +/+ PathName("hoa.scd");
+
       if(defaultsLoaded.not, {
-			var pkgPath = PathName(Quarks.quarkNameAsLocalPath("outputfx"));
-			var defaults = pkgPath +/+ PathName("chains") +/+ PathName("default.scd");
-		load(defaults.fullPath);
+
+        load(defaults.fullPath);
+
+        // Only load hoa stuff if atk is installed
+        if(\HoaRoll.asClass.notNil, { 
+          load(hoa.fullPath)
+        });
+
         defaultsLoaded = true;
+
       })
     }
 
