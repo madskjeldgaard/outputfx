@@ -8,7 +8,7 @@ OFX_Chain {
 	var <slotNames, <slotsInUse, <proxy, <sources;
 
     *loadDefaultChains{
-      var pkgPath = PathName(Quarks.quarkNameAsLocalPath("outputfx"));
+      var pkgPath = PathName(Quarks.quarkNameAsLocalPath("OutputFX"));
       var defaults = pkgPath +/+ PathName("chains") +/+ PathName("default.scd");
       var hoa = pkgPath +/+ PathName("chains") +/+ PathName("hoa.scd");
 
@@ -17,7 +17,7 @@ OFX_Chain {
         load(defaults.fullPath);
 
         // Only load hoa stuff if atk is installed
-        if(\HoaRoll.asClass.notNil, { 
+        if(\HoaRoll.asClass.notNil, {
           load(hoa.fullPath)
         });
 
@@ -346,7 +346,6 @@ OFX_Chain {
 	// gui { |numItems = 16, buttonList, parent, bounds, isMaster = false|
 	// 	^ChainGui(this, numItems, parent, bounds, true, buttonList, isMaster);
 	// }
-
 
 	// introspection & preset support:
 	activeSlotNames { ^slotsInUse.array }
